@@ -20,20 +20,21 @@ class Player:
         self.bottom_paddle_y = WINDOW_HEIGHT - 40
         self.long_side = 120
         self.short_side = 20
-        self.speed = 2
+        self.speed = 4
         self.side_paddle = pygame.Rect(self.side_paddle_x, self.side_paddle_y, self.short_side, self.long_side)
         self.top_paddle = pygame.Rect(self.horizontal_paddles_x, self.top_paddle_y, self.long_side, self.short_side)
         self.bottom_paddle = pygame.Rect(
             self.horizontal_paddles_x, self.bottom_paddle_y, self.long_side, self.short_side)
 
-    def draw_paddles(self, surface):
+    def draw_paddles(self, surface, horizontal, vertical):
         self.side_paddle = pygame.Rect(self.side_paddle_x, self.side_paddle_y, self.short_side, self.long_side)
         self.top_paddle = pygame.Rect(self.horizontal_paddles_x, self.top_paddle_y, self.long_side, self.short_side)
         self.bottom_paddle = pygame.Rect(
             self.horizontal_paddles_x, self.bottom_paddle_y, self.long_side, self.short_side)
-        pygame.draw.rect(surface, PADDLE_COLOR, self.side_paddle)
-        pygame.draw.rect(surface, PADDLE_COLOR, self.top_paddle)
-        pygame.draw.rect(surface, PADDLE_COLOR, self.bottom_paddle)
+
+        surface.blit(vertical, self.side_paddle)
+        surface.blit(horizontal, self.top_paddle)
+        surface.blit(horizontal, self.bottom_paddle)
 
     def move_side_paddle(self, y_direction):
         if y_direction == "down":
@@ -48,7 +49,7 @@ class Player:
             self.horizontal_paddles_x += self.speed
 
     def move_ai(self, ball):
-        if ball.pos_x < (WINDOW_WIDTH * 0.75) - self.long_side:
+        if ball.pos_x < (WINDOW_WIDTH * 0.5) - self.long_side:
             if ball.pos_y > self.side_paddle_y + self.long_side/2:
                 self.side_paddle_y += self.speed
             else:
@@ -62,6 +63,7 @@ class Player:
         self.side_paddle_x = 20
         self.horizontal_paddles_x = WINDOW_WIDTH/4
         self.is_computer = True
+        self.speed = 2
 
 
 class Ball:
@@ -101,6 +103,9 @@ def play_pong():
     pygame.init()
     clock = pygame.time.Clock()
     player = Player()
+    paddle = pygame.image.load("paddle.png")
+    vertical_paddle = pygame.transform.rotate(paddle, 90)
+
     computer = Player()
     computer.set_computer()
     ball = Ball()
@@ -156,8 +161,8 @@ def play_pong():
             player.move_horizontal_paddles("right")
 
         surface.fill(BACK_COLOR)
-        player.draw_paddles(surface)
-        computer.draw_paddles(surface)
+        player.draw_paddles(surface, paddle, vertical_paddle)
+        computer.draw_paddles(surface, paddle, vertical_paddle)
         computer.move_ai(ball)
 
         inverse_timer += 1
@@ -190,7 +195,7 @@ def play_pong():
                 inverse_timer = 0
         ball.draw_ball(surface)
         pygame.display.update()
-        clock.tick(120)
+        clock.tick(60)
 
 
 play_pong()
