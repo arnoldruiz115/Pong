@@ -49,35 +49,35 @@ class Player:
             self.horizontal_paddles_x += self.speed
 
     def move_ai(self, ball):
-        if ball.pos_x < (WINDOW_WIDTH * 0.5) - self.long_side:
-            if ball.pos_y > self.side_paddle_y + self.long_side/2:
+        if ball.pos_x < WINDOW_WIDTH/2 - self.long_side / 2:
+            if ball.pos_y > self.side_paddle_y + self.long_side/2 + ball.ball_size:
                 self.side_paddle_y += self.speed
-            else:
+            if ball.pos_y < self.side_paddle_y + self.long_side / 2 + ball.ball_size:
                 self.side_paddle_y -= self.speed
-            if ball.pos_x > self.horizontal_paddles_x + self.long_side/2 and self.horizontal_paddles_x < WINDOW_WIDTH/2 - self.long_side:
+            if ball.pos_x > self.horizontal_paddles_x + self.long_side/2 + ball.ball_size:
                 self.horizontal_paddles_x += self.speed
-            else:
+            if ball.pos_x < self.horizontal_paddles_x + self.long_side / 2 + ball.ball_size:
                 self.horizontal_paddles_x -= self.speed
 
     def set_computer(self):
         self.side_paddle_x = 20
         self.horizontal_paddles_x = WINDOW_WIDTH/4
         self.is_computer = True
-        self.speed = 2
+        self.speed = 3
 
 
 class Ball:
     def __init__(self):
         self.pos_x = WINDOW_WIDTH/2 - 10
         self.pos_y = WINDOW_HEIGHT/2 - 10
-        self.ball_size = 20
+        self.ball_size = 14
         self.ball_speed = 1
         self.ball_rect = pygame.Rect(self.pos_x, self.pos_y, self.ball_size, self.ball_size)
         self.velocity = pygame.Vector2()
 
-    def draw_ball(self, surface):
+    def draw_ball(self, surface, ball):
         self.ball_rect = pygame.Rect(self.pos_x, self.pos_y, self.ball_size, self.ball_size)
-        pygame.draw.rect(surface, PADDLE_COLOR, self.ball_rect)
+        surface.blit(ball, self.ball_rect)
 
     def serve_ball(self):
         self.velocity[0] = random.randint(1, 4)
@@ -88,9 +88,17 @@ class Ball:
         self.pos_y += self.ball_speed * self.velocity[1]
 
     def inverse_x(self):
+        if self.velocity[0] > 0:
+            self.pos_x -= self.ball_size
+        else:
+            self.pos_x += self.ball_size
         self.velocity[0] *= -1
 
     def inverse_y(self):
+        if self.velocity[1] > 0:
+            self.pos_y -= self.ball_size/2
+        else:
+            self.pos_y += self.ball_size/2
         self.velocity[1] *= -1
 
     def reset_ball(self):
@@ -104,6 +112,7 @@ def play_pong():
     clock = pygame.time.Clock()
     player = Player()
     paddle = pygame.image.load("paddle.png")
+    blue_ball = pygame.image.load("ball.png")
     vertical_paddle = pygame.transform.rotate(paddle, 90)
 
     computer = Player()
@@ -180,22 +189,17 @@ def play_pong():
             if ball.pos_y < 0:
                 ball.reset_ball()
                 ball_served = False
-        if inverse_timer > 5:
             if ball.ball_rect.colliderect(player.side_paddle):
                 ball.inverse_x()
-                inverse_timer = 0
             if ball.ball_rect.colliderect(player.top_paddle) or ball.ball_rect.colliderect(player.bottom_paddle):
                 ball.inverse_y()
-                inverse_timer = 0
             if ball.ball_rect.colliderect(computer.side_paddle):
                 ball.inverse_x()
-                inverse_timer = 0
             if ball.ball_rect.colliderect(computer.top_paddle) or ball.ball_rect.colliderect(computer.bottom_paddle):
                 ball.inverse_y()
-                inverse_timer = 0
-        ball.draw_ball(surface)
+        ball.draw_ball(surface, blue_ball)
         pygame.display.update()
-        clock.tick(60)
+        clock.tick(120)
 
 
 play_pong()
