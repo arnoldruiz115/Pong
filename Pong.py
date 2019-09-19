@@ -4,8 +4,8 @@ import sys
 import random
 
 # Constants
-WINDOW_WIDTH = 900
-WINDOW_HEIGHT = 500
+WINDOW_WIDTH = 1000
+WINDOW_HEIGHT = 550
 BACK_COLOR = (25, 30, 70)
 
 
@@ -19,7 +19,7 @@ class Player:
         self.bottom_paddle_y = WINDOW_HEIGHT - 40
         self.long_side = 120
         self.short_side = 20
-        self.speed = 6
+        self.speed = 7
         self.side_paddle = pygame.Rect(self.side_paddle_x, self.side_paddle_y, self.short_side, self.long_side)
         self.top_paddle = pygame.Rect(self.horizontal_paddles_x, self.top_paddle_y, self.long_side, self.short_side)
         self.bottom_paddle = pygame.Rect(
@@ -63,13 +63,13 @@ class Player:
         self.side_paddle_x = 20
         self.horizontal_paddles_x = WINDOW_WIDTH/4
         self.is_computer = True
-        self.speed = 3
+        self.speed = 4
 
 
 class Ball:
     def __init__(self):
         self.ball_size = 14
-        self.ball_speed = 2
+        self.ball_speed = 1
         self.pos_x = WINDOW_WIDTH/2 - self.ball_size/2
         self.pos_y = WINDOW_HEIGHT/2 - self.ball_size/2
         self.x_random_speed = random.randint(2, 4)
@@ -82,8 +82,8 @@ class Ball:
         surface.blit(ball, self.ball_rect)
 
     def serve_ball(self, direction):
-        self.x_random_speed = random.randint(2, 3)
-        self.y_random_speed = random.randint(2, 3)
+        self.x_random_speed = random.randint(4, 6)
+        self.y_random_speed = random.randint(2, 6)
         if direction == 'computer':
             x_direction = -1
         else:
@@ -100,16 +100,10 @@ class Ball:
         self.pos_y += self.velocity[1] * self.ball_speed
 
     def inverse_x(self):
-        if self.pos_x > WINDOW_WIDTH/2:
-            self.velocity[0] = -1 * self.x_random_speed
-        else:
-            self.velocity[0] = self.x_random_speed
+        self.velocity[0] *= -1
 
     def inverse_y(self):
-        if self.pos_y > WINDOW_HEIGHT/2:
-            self.velocity[1] = -self.y_random_speed
-        else:
-            self.velocity[1] = self.y_random_speed
+        self.velocity[1] *= -1
 
     def reset_ball(self):
         self.pos_x = WINDOW_WIDTH/2 - self.ball_size/2
@@ -384,6 +378,9 @@ def play_pong():
 
         if ball.ball_rect.colliderect(player.side_paddle):
             ball.inverse_x()
+            if ball.ball_rect.bottom < player.side_paddle.top + player.long_side/4:
+                ball.velocity[1] = -8
+                print('hit top part of player paddle')
             ball.pos_x = player.side_paddle.left - ball.ball_size
             bounce_sound.play()
         if ball.ball_rect.colliderect(computer.side_paddle):
