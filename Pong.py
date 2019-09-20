@@ -7,6 +7,8 @@ import random
 WINDOW_WIDTH = 1000
 WINDOW_HEIGHT = 550
 BACK_COLOR = (25, 30, 70)
+WHITE = (250, 250, 250)
+GREEN = (117, 240, 142)
 
 
 class Player:
@@ -49,9 +51,9 @@ class Player:
 
     def move_ai(self, ball):
         # The computer vertical paddle only sees up to 75% of length of screen
-        if ball.pos_y > self.side_paddle_y + self.long_side / 2:
+        if ball.pos_y > (self.side_paddle_y + self.long_side / 2) - ball.ball_size/2:
             self.side_paddle_y += self.speed
-        else:
+        if ball.pos_y < (self.side_paddle_y + self.long_side / 2) + ball.ball_size/2:
             self.side_paddle_y -= self.speed
         offset = WINDOW_WIDTH/2 - self.long_side
         if ball.pos_x > self.horizontal_paddles_x + self.long_side / 2 and self.horizontal_paddles_x < offset:
@@ -63,7 +65,7 @@ class Player:
         self.side_paddle_x = 20
         self.horizontal_paddles_x = WINDOW_WIDTH/4
         self.is_computer = True
-        self.speed = 4
+        self.speed = 3.5
 
 
 class Ball:
@@ -83,7 +85,7 @@ class Ball:
 
     def serve_ball(self, direction):
         self.x_random_speed = random.randint(4, 6)
-        self.y_random_speed = random.randint(2, 6)
+        self.y_random_speed = random.randint(2, 4)
         if direction == 'computer':
             x_direction = -1
         else:
@@ -114,10 +116,10 @@ class Scores:
     def __init__(self):
         self.player_score = 0
         self.ai_score = 0
-        self.player_games_won = 0
-        self.ai_games_won = 0
+        self.player_matches_won = 0
+        self.ai_matches_won = 0
         self.needed_points = 11
-        self.needed_matches = 3
+        self.needed_games = 3
         self.player_is_winner = False
         self.ai_is_winner = False
         self.lose_point_sound = pygame.mixer.Sound("sounds/lose_point.wav")
@@ -129,14 +131,42 @@ class Scores:
 
     def draw_score(self, surface):
         score_font = pygame.font.Font('fonts/slkscr.ttf', 92)
-        player_text = score_font.render("{}".format(self.player_score), 1, (250, 250, 250))
+        player_text = score_font.render("{}".format(self.player_score), 1, WHITE)
         player_rect = player_text.get_rect()
         player_rect.topleft = WINDOW_WIDTH/2 + 40, 40
         surface.blit(player_text, player_rect)
-        ai_text = score_font.render("{}".format(self.ai_score), 1, (250, 250, 250))
+        ai_text = score_font.render("{}".format(self.ai_score), 1, WHITE)
         ai_rect = ai_text.get_rect()
         ai_rect.topright = WINDOW_WIDTH/2 - 40, 40
         surface.blit(ai_text, ai_rect)
+        game_won_font = pygame.font.Font('fonts/slkscr.ttf', 45)
+        game_undecided_font = pygame.font.Font('fonts/slkscr.ttf', 30)
+        indicator = "O"
+        player_wins = self.player_matches_won
+        computer_wins = self.ai_matches_won
+        for i in range(3):
+            # Player Matches
+            offset = 0
+            if player_wins > 0:
+                player_wins -= 1
+                indicator_text = game_won_font.render(indicator, 1, GREEN)
+                offset = 4
+            else:
+                indicator_text = game_undecided_font.render(indicator, 1, WHITE)
+            indicator_rect = indicator_text.get_rect()
+            indicator_rect.bottomleft = ((WINDOW_WIDTH/2 + 50) + (i * 40),  170 + offset)
+            surface.blit(indicator_text, indicator_rect)
+            # Computer Matches
+            offset = 0
+            if computer_wins > 0:
+                computer_wins -= 1
+                indicator_ai_text = game_won_font.render(indicator, 1, GREEN)
+                offset = 4
+            else:
+                indicator_ai_text = game_undecided_font.render(indicator, 1, WHITE)
+            indicator_ai_rect = indicator_ai_text.get_rect()
+            indicator_ai_rect.bottomright = ((WINDOW_WIDTH/2 - 50) - (i * 40),  170 + offset)
+            surface.blit(indicator_ai_text, indicator_ai_rect)
 
     def increase_scores(self, ball):
         if ball.pos_x + ball.ball_size > WINDOW_WIDTH:
@@ -180,34 +210,34 @@ class Scores:
             if self.player_score >= self.needed_points and difference > 1:
                 self.player_score = 0
                 self.ai_score = 0
-                self.player_games_won += 1
-                if self.player_games_won == self.needed_matches:
+                self.player_matches_won += 1
+                if self.player_matches_won == self.needed_games:
                     self.player_score = 0
                     self.ai_score = 0
-                    self.player_games_won = 0
-                    self.ai_games_won = 0
-                    self.win_game_sound.play()
+                    self.player_matches_won = 0
+                    self.ai_matches_won = 0
+                    self.win_match_sound.play()
                     self.player_is_winner = True
                     ball.reset_ball()
                 else:
-                    self.win_match_sound.play()
+                    self.win_game_sound.play()
 
         if self.ai_score > self.player_score:
             difference = self.ai_score - self.player_score
             if self.ai_score >= self.needed_points and difference > 1:
                 self.player_score = 0
                 self.ai_score = 0
-                self.ai_games_won += 1
-                if self.ai_games_won == self.needed_matches:
+                self.ai_matches_won += 1
+                if self.ai_matches_won == self.needed_games:
                     self.player_score = 0
                     self.ai_score = 0
-                    self.player_games_won = 0
-                    self.ai_games_won = 0
-                    self.lose_game_sound.play()
+                    self.player_matches_won = 0
+                    self.ai_matches_won = 0
+                    self.lose_match_sound.play()
                     self.ai_is_winner = True
                     ball.reset_ball()
                 else:
-                    self.lose_match_sound.play()
+                    self.lose_game_sound.play()
 
     def reset_winner(self):
         self.ai_is_winner = False
@@ -226,15 +256,24 @@ def draw_main_screen(surface):
     surface.fill(BACK_COLOR)
     # Title
     title_font = pygame.font.Font('fonts/slkscr.ttf', 82)
-    title_text = title_font.render("Pong", 1, (250, 250, 250))
+    title_text = title_font.render("Pong", 1, WHITE)
     title_rect = title_text.get_rect()
     title_width = title_rect.topright[0] - title_rect.topleft[0]
     title_rect.topleft = WINDOW_WIDTH / 2 - title_width/2, 60
     surface.blit(title_text, title_rect)
 
+    # Tip
+    tip_font = pygame.font.Font('fonts/slkscr.ttf', 16)
+    tip_text = tip_font.render(
+        "Tip: Hitting the ball with the tips of the vertical paddle makes it go faster.", 1, WHITE)
+    tip_rect = tip_text.get_rect()
+    tip_width = tip_rect.topright[0] - tip_rect.topleft[0]
+    tip_rect.topleft = WINDOW_WIDTH / 2 - tip_width/2, WINDOW_HEIGHT - 200
+    surface.blit(tip_text, tip_rect)
+
     # Press to start
     start_font = pygame.font.Font('fonts/slkscr.ttf', 32)
-    start_text = start_font.render("Press Space to Start", 1, (250, 250, 250))
+    start_text = start_font.render("Press Space to Start", 1, WHITE)
     start_rect = start_text.get_rect()
     width = start_rect.topright[0] - start_rect.topleft[0]
     start_rect.topleft = WINDOW_WIDTH / 2 - width/2, WINDOW_HEIGHT - 60
@@ -243,14 +282,14 @@ def draw_main_screen(surface):
 
 def draw_player_wins(surface):
     player_win_font = pygame.font.Font('fonts/slkscr.ttf', 54)
-    player_win_text = player_win_font.render("Player Wins!", 1, (250, 250, 250))
+    player_win_text = player_win_font.render("Player Wins!", 1, WHITE)
     player_win_rect = player_win_text.get_rect()
     player_win_width = player_win_rect.topright[0] - player_win_rect.topleft[0]
     player_win_rect.topleft = WINDOW_WIDTH * 0.75 - player_win_width/2, 60
     surface.blit(player_win_text, player_win_rect)
 
     rematch_font = pygame.font.Font('fonts/slkscr.ttf', 26)
-    rematch_text = rematch_font.render("Press SPACE to play again.", 1, (250, 250, 250))
+    rematch_text = rematch_font.render("Press SPACE to play again.", 1, WHITE)
     rematch_rect = rematch_text.get_rect()
     rematch_width = rematch_rect.topright[0] - rematch_rect.topleft[0]
     rematch_rect.topleft = WINDOW_WIDTH * 0.75 - rematch_width/2, 160
@@ -259,14 +298,14 @@ def draw_player_wins(surface):
 
 def draw_ai_wins(surface):
     ai_win_font = pygame.font.Font('fonts/slkscr.ttf', 44)
-    ai_win_text = ai_win_font.render("Computer Wins", 1, (250, 250, 250))
+    ai_win_text = ai_win_font.render("Computer Wins", 1, WHITE)
     ai_win_rect = ai_win_text.get_rect()
     ai_win_width = ai_win_rect.topright[0] - ai_win_rect.topleft[0]
     ai_win_rect.topleft = WINDOW_WIDTH * 0.25 - ai_win_width/2, 60
     surface.blit(ai_win_text, ai_win_rect)
 
     rematch_font = pygame.font.Font('fonts/slkscr.ttf', 26)
-    rematch_text = rematch_font.render("Press SPACE to play again.", 1, (250, 250, 250))
+    rematch_text = rematch_font.render("Press SPACE to play again.", 1, WHITE)
     rematch_rect = rematch_text.get_rect()
     rematch_width = rematch_rect.topright[0] - rematch_rect.topleft[0]
     rematch_rect.topleft = WINDOW_WIDTH * 0.25 - rematch_width/2, 160
@@ -332,10 +371,6 @@ def play_pong():
                 if event.key == K_RIGHT:
                     move_left = False
                     move_right = True
-                if event.key == K_w:
-                    points.ai_score += 1
-                if event.key == K_e:
-                    points.player_score += 1
 
             if event.type == KEYUP:
                 if event.key == K_DOWN:
@@ -378,9 +413,10 @@ def play_pong():
 
         if ball.ball_rect.colliderect(player.side_paddle):
             ball.inverse_x()
-            if ball.ball_rect.bottom < player.side_paddle.top + player.long_side/4:
-                ball.velocity[1] = -8
-                print('hit top part of player paddle')
+            # Equation to calculate Angle: ball.middle - paddle.top + 60 = relative position
+            # Relative position * (8/60) = y speed and direction
+            relative_position = (ball.ball_rect.top + ball.ball_size/2) - (player.side_paddle.top + 60)
+            ball.velocity[1] = relative_position * (8/60)
             ball.pos_x = player.side_paddle.left - ball.ball_size
             bounce_sound.play()
         if ball.ball_rect.colliderect(computer.side_paddle):
