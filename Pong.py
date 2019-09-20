@@ -204,7 +204,7 @@ class Scores:
                 ball.reset_ball()
                 ball.serve_ball('computer')
 
-    def check_scores(self, ball):
+    def check_scores(self, ball, surface):
         if self.player_score > self.ai_score:
             difference = self.player_score - self.ai_score
             if self.player_score >= self.needed_points and difference > 1:
@@ -220,7 +220,16 @@ class Scores:
                     self.player_is_winner = True
                     ball.reset_ball()
                 else:
+                    # Show Player won Match
+                    player_win_font = pygame.font.Font('fonts/slkscr.ttf', 30)
+                    player_win_text = player_win_font.render("Player Won the Match!", 1, WHITE)
+                    player_win_rect = player_win_text.get_rect()
+                    player_win_width = player_win_rect.topright[0] - player_win_rect.topleft[0]
+                    player_win_rect.topleft = WINDOW_WIDTH * 0.75 - player_win_width / 2, 60
+                    surface.blit(player_win_text, player_win_rect)
+                    pygame.display.update()
                     self.win_game_sound.play()
+                    pygame.time.wait(2500)
 
         if self.ai_score > self.player_score:
             difference = self.ai_score - self.player_score
@@ -237,7 +246,15 @@ class Scores:
                     self.ai_is_winner = True
                     ball.reset_ball()
                 else:
+                    ai_win_font = pygame.font.Font('fonts/slkscr.ttf', 28)
+                    ai_win_text = ai_win_font.render("Computer Won the Match", 1, WHITE)
+                    ai_win_rect = ai_win_text.get_rect()
+                    ai_win_width = ai_win_rect.topright[0] - ai_win_rect.topleft[0]
+                    ai_win_rect.topleft = WINDOW_WIDTH * 0.25 - ai_win_width / 2, 60
+                    surface.blit(ai_win_text, ai_win_rect)
+                    pygame.display.update()
                     self.lose_game_sound.play()
+                    pygame.time.wait(2500)
 
     def reset_winner(self):
         self.ai_is_winner = False
@@ -408,7 +425,7 @@ def play_pong():
                 pygame.display.update()
                 restart_game = check_for_input()
                 points.reset_winner()
-        points.check_scores(ball)
+        points.check_scores(ball, surface)
         ball.move_ball()
 
         if ball.ball_rect.colliderect(player.side_paddle):
